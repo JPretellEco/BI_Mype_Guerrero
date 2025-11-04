@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Ventas - Criadero Guerrero</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #E9F0F8; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px 0; }
+    .container { background-color: #FFFFFF; border: 1px solid #C9D6E8; border-radius: 8px; padding: 20px; width: 90%; max-width: 1000px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 25px; }
+    h1 { text-align: center; color: #005f73; margin: 0; font-size: 1.5em; }
+    #catalogo-productos.swiper { width: 100%; overflow: hidden; padding: 0 20px; box-sizing: border-box; }
+    .gallery-item { cursor: pointer; text-align: left; color: #555; }
+    .fish-image { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+    .gallery-item h3 { margin: 0 0 5px 0; font-size: 1em; }
+    .gallery-item p { margin: 0; font-size: 0.9em; }
+    .form-input, .form-select, .form-textarea { border: 1px solid #003366; padding: 10px; border-radius: 4px; font-size: 1em; width: 100%; box-sizing: border-box; }
+    .form-container { display: flex; flex-direction: column; gap: 15px; }
+    .input-group { display: flex; gap: 15px; align-items: center; }
+    .main-controls { display: flex; gap: 15px; flex-wrap: wrap; }
+    .main-controls .left-side { flex-grow: 1; display: flex; gap: 15px; align-items: flex-start; min-width: 250px; }
+    .icon-placeholder { font-size: 3em; color: #003366; cursor: pointer; transform: rotate(180deg); }
+    .form-textarea { height: 100px; resize: vertical; }
+    .button-group { display: flex; flex-direction: column; gap: 10px; }
+    .btn { padding: 15px 25px; border: none; border-radius: 5px; color: white; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    a.btn { text-decoration: none; text-align: center; }
+    .btn-register { background-color: #28a745; }
+    .btn-clear { background-color: #dc3545; }
+    .resumen-en-vivo { background-color: #e6f7ff; border-left: 5px solid #007bff; padding: 15px; margin: 0 auto; border-radius: 5px; width: 100%; max-width: 90%; }
+    .resumen-en-vivo h4 { margin-top: 0; }
+    .resumen-en-vivo p { margin: 5px 0; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-contenido { background-color: white; padding: 30px 40px; border-radius: 10px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-size: 1.2em; }
+    .modal-contenido button { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 20px; font-size: 1em; }
+    @media (min-width: 600px) { .button-group { flex-direction: row; } }
+    .logo-marca { max-height: 80px; width: auto; margin: 0 auto 10px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <img src="{{ url_for('static', filename='vizydatt (1).png') }}" alt="Logo de Criadero Guerrero" class="logo-marca" onerror="this.style.display='none'">
+
+    <h1>CRIADERO GUERRERO - RUC 10169248056</h1>
+
+    <header class="header-controls">
+      <select id="filtroCategoria" class="form-select top-select">
+        <option value="todos">Mostrar Todos</option>
+        <option value="Bolsa">Bolsa</option>
+        <option value="Cometa">Cometa</option>
+        <option value="Espada">Espada</option>
+        <option value="Goldfish">Goldfish</option>
+        <option value="Guppy">Guppy</option>
+        <option value="Molly">Molly</option>
+        <option value="Platty">Platty</option>
+        <option value="Rana">Rana</option>
+        <option value="Variado">Variado</option>
+      </select>
+    </header>
+
+    <div id="catalogo-productos" class="swiper">
+      <div class="swiper-wrapper" id="swiperWrapper"></div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+    </div>
+
+    <main class="form-container">
+      <form id="registroForm">
+        <input type="text" class="form-input" name="familia" id="familia" placeholder="Familia" required readonly>
+        <input type="text" class="form-input" name="especie" id="especie" placeholder="Especie" required readonly>
+        <div class="input-group">
+          <input type="number" class="form-input" name="precio" id="precio" placeholder="Precio (S/.)" required step="0.01">
+          <input type="number" class="form-input" name="cantidad" id="cantidad" placeholder="Cantidad" required>
+          <input type="number" class="form-input" name="total" id="total" placeholder="Venta Total" readonly>
+        </div>
+        <input type="text" class="form-input" name="cliente" id="cliente" placeholder="Cliente" required>
+        <div class="main-controls">
+          <div class="left-side">
+            <div class="icon-placeholder">&#x21AA;</div>
+            <textarea class="form-textarea" name="notas" placeholder="Notas adicionales"></textarea>
+          </div>
+          <div class="button-group">
+            <button type="submit" class="btn btn-register">REGISTRAR</button>
+            <button type="reset" class="btn btn-clear">BORRAR</button>
+            <a href="{{ url_for('reporte') }}" class="btn btn-register">📊 Ver Reporte</a>
+          </div>
+        </div>
+      </form>
+    </main>
+
+    <section id="resumen-en-vivo" class="resumen-en-vivo" style="display: none;">
+      <h4>Resumen de Venta Actual</h4>
+      <p><strong>Cliente:</strong> <span id="resumenCliente">...</span></p>
+      <p><strong>Especie:</strong> <span id="resumenEspecie">...</span></p>
+      <p><strong>Total a Pagar:</strong> S/. <span id="resumenTotal">0.00</span></p>
+    </section>
+
+  </div>
+
+  <div id="modal-exito" class="modal-overlay">
+    <div class="modal-contenido">
+      <p id="modal-mensaje">✅ ¡Venta registrada con éxito!</p>
+      <button id="modal-cerrar-btn">Cerrar</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    const catalogo = { "Goldfish": [{ nombre: "Goldfish", imagen: "https://placehold.co/400x300/facc15/white?text=Goldfish" }, { nombre: "Oranda", imagen: "https://placehold.co/400x300/fb923c/white?text=Oranda" }, { nombre: "Telescópico", imagen: "https://placehold.co/400x300/f87171/white?text=Telescópico" }, { nombre: "Oranda Negro", imagen: "https://placehold.co/400x300/1f2937/white?text=Oranda+Negro" }, { nombre: "Apache", imagen: "https://placehold.co/400x300/ef4444/white?text=Apache" }, { nombre: "Burbuja", imagen: "https://placehold.co/400x300/38bdf8/white?text=Burbuja" }, { nombre: "Telescópico Negro", imagen: "https://placehold.co/400x300/374151/white?text=Telescópico" }, { nombre: "Oranda Calico", imagen: "https://placehold.co/400x300/f59e0b/white?text=Oranda+Calico" }, { nombre: "Variados", imagen: "https://placehold.co/400x300/84cc16/white?text=Variado" }], "Bolsa": [{ nombre: "Bolsa", imagen: "https://placehold.co/400x300/9ca3af/white?text=Bolsa" }], "Cometa": [{ nombre: "Cometa", imagen: "https://placehold.co/400x300/f97316/white?text=Cometa" }], "Espada": [{ nombre: "Espada", imagen: "https://placehold.co/400x300/dc2626/white?text=Espada" }], "Guppy": [{ nombre: "Guppy", imagen: "https://placehold.co/400x300/4ade80/white?text=Guppy" }], "Molly": [{ nombre: "Molly", imagen: "https://placehold.co/400x300/2dd4bf/white?text=Molly" }, { nombre: "Molly Balon", imagen: "https://placehold.co/400x300/0e7490/white?text=Molly+Balon" }], "Platty": [{ nombre: "Platty", imagen: "https://placehold.co/400x300/60a5fa/white?text=Platty" }], "Rana": [{ nombre: "Rana", imagen: "https://placehold.co/400x300/16a34a/white?text=Rana" }], "Variado": [{ nombre: "Variados", imagen: "https://placehold.co/400x300/a855f7/white?text=Variados" }] };
+    const swiper = new Swiper('.swiper', { navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }, loop: false, slidesPerView: 'auto', spaceBetween: 15 });
+    const filtro = document.getElementById("filtroCategoria");
+    const swiperWrapper = document.getElementById("swiperWrapper");
+    const familiaInput = document.getElementById("familia");
+    const especieInput = document.getElementById("especie");
+    const clienteInput = document.getElementById("cliente");
+    const precioInput = document.getElementById("precio");
+    const cantidadInput = document.getElementById("cantidad");
+    const totalInput = document.getElementById("total");
+    const form = document.getElementById("registroForm");
+    const resumenDiv = document.getElementById('resumen-en-vivo');
+    const modal = document.getElementById('modal-exito');
+    const modalMensaje = document.getElementById('modal-mensaje');
+    const cerrarModalBtn = document.getElementById('modal-cerrar-btn');
+
+    function actualizarResumenEnVivo() { const cliente = clienteInput.value; const especie = especieInput.value; const total = parseFloat(totalInput.value) || 0; if (cliente && especie && total > 0) { document.getElementById('resumenCliente').textContent = cliente; document.getElementById('resumenEspecie').textContent = especie; document.getElementById('resumenTotal').textContent = total.toFixed(2); resumenDiv.style.display = 'block'; } else { resumenDiv.style.display = 'none'; } }
+    function seleccionarEspecie(nombreEspecie, nombreFamilia) { familiaInput.value = nombreFamilia; especieInput.value = nombreFamilia; especieInput.value = nombreEspecie; actualizarResumenEnVivo(); }
+    function actualizarCatalogo() { const categoria = filtro.value; familiaInput.value = (categoria === 'todos') ? '' : categoria; especieInput.value = ''; swiperWrapper.innerHTML = ''; const agregarSlides = (familia) => { catalogo[familia].forEach(pez => { const slideHTML = `<div class="swiper-slide" style="width: 200px;"><div class="gallery-item" onclick="seleccionarEspecie('${pez.nombre}', '${familia}')"><img src="${pez.imagen}" alt="${pez.nombre}" class="fish-image"><h3>${pez.nombre}</h3><p>${familia}</p></div></div>`; swiperWrapper.innerHTML += slideHTML; }); }; if (categoria === 'todos') { Object.keys(catalogo).forEach(familia => { agregarSlides(familia); }); } else if (catalogo[categoria]) { agregarSlides(categoria); } swiper.update(); }
+    
+    filtro.addEventListener('change', actualizarCatalogo);
+    function calcularTotal() { const precio = parseFloat(precioInput.value) || 0; const cantidad = parseFloat(cantidadInput.value) || 0; totalInput.value = (precio * cantidad).toFixed(2); actualizarResumenEnVivo(); }
+    precioInput.addEventListener("input", calcularTotal);
+    cantidadInput.addEventListener("input", calcularTotal);
+    clienteInput.addEventListener("input", actualizarResumenEnVivo);
+
+    // --- CORRECCIÓN: Lógica para enviar datos al servidor Flask ---
+    form.addEventListener("submit", function(e) { 
+      e.preventDefault(); 
+      
+      const hoy = new Date();
+      const fechaDeHoy = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      
+      const ventaData = { 
+        fecha: fechaDeHoy,
+        familia: familiaInput.value, 
+        especie: especieInput.value, 
+        precio: precioInput.value, 
+        cantidad: cantidadInput.value, 
+        total: totalInput.value, 
+        cliente: clienteInput.value, 
+        notas: document.querySelector(".form-textarea").value 
+      }; 
+
+      // Enviar datos al endpoint '/agregar' de Flask
+      fetch("{{ url_for('agregar_venta') }}", {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(ventaData),
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              modalMensaje.textContent = '✅ ¡Venta registrada con éxito!';
+              modal.style.display = 'flex'; 
+              form.reset(); 
+              actualizarCatalogo(); 
+              actualizarResumenEnVivo();
+          } else {
+              modalMensaje.textContent = `❌ Error: ${data.error || 'No se pudo registrar la venta.'}`;
+              modal.style.display = 'flex';
+          }
+      })
+      .catch((error) => {
+          console.error('Error de red:', error);
+          modalMensaje.textContent = '❌ Error de conexión con el servidor.';
+          modal.style.display = 'flex';
+      });
+    });
+
+    cerrarModalBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    modal.addEventListener('click', (e) => { if (e.target === modal) { modal.style.display = 'none'; } });
+    
+    // Carga inicial del catálogo
+    actualizarCatalogo();
+  </script>
+</body>
+</html>
+

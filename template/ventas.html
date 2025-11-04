@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Ventas - Criadero Guerrero</title>
+    <style>
+        /* Estilos consistentes con tu formulario de registro */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #E9F0F8; color: #333; margin: 0; padding: 20px; }
+        .container { background-color: #FFFFFF; border: 1px solid #C9D6E8; border-radius: 8px; padding: 20px; width: 95%; max-width: 1200px; margin: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #005f73; margin-bottom: 20px; font-size: 1.8em; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #C9D6E8; padding: 12px; text-align: left; font-size: 0.9em; }
+        th { background-color: #005f73; color: white; cursor: pointer; }
+        tr:nth-child(even) { background-color: #f8fafd; }
+        tr:hover { background-color: #e6f7ff; }
+        .button-container { text-align: center; margin-top: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .btn { padding: 15px 25px; border: none; border-radius: 5px; color: white; font-size: 1.1em; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-back { background-color: #007bff; }
+        .btn-clear { background-color: #6c757d; cursor: not-allowed; } /* Color gris para botón deshabilitado */
+        .btn-export { background-color: #1a7342; }
+        .summary { text-align: right; margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #005f73; }
+        .no-data { text-align: center; padding: 40px; font-size: 1.2em; color: #777; }
+        .filters-container { background-color: #f8fafd; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+        .filters-container label { font-weight: bold; margin-right: 5px; }
+        .filters-container input { padding: 8px; border: 1px solid #C9D6E8; border-radius: 4px; }
+        .btn-filter { background-color: #ff8c00; padding: 8px 15px; font-size: 1em; }
+        .logo-marca { max-height: 80px; width: auto; margin: 0 auto 10px; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="{{ url_for('static', filename='vizydatt (1).png') }}" alt="Logo de Criadero Guerrero" class="logo-marca" onerror="this.style.display='none'">
+        <h1>📊 Reporte de Ventas</h1>
+
+        <div class="filters-container">
+            <label for="startDate">Desde:</label>
+            <input type="date" id="startDate">
+            <label for="endDate">Hasta:</label>
+            <input type="date" id="endDate">
+            <input type="text" id="filterCliente" placeholder="Filtrar por cliente...">
+            <button id="applyFilter" class="btn btn-filter">Aplicar Filtro</button>
+        </div>
+
+        <div id="report-content">
+            <table id="ventasTable">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Familia</th>
+                        <th>Especie</th>
+                        <th>Cantidad</th>
+                        <th>Precio (S/.)</th>
+                        <th>Total Venta (S/.)</th>
+                        <th>Notas</th>
+                    </tr>
+                </thead>
+                <tbody id="ventasBody"></tbody>
+            </table>
+            <div id="summary" class="summary"></div>
+        </div>
+        
+        <div id="no-data-message" class="no-data" style="display: none;">
+            <p>Aún no hay ventas registradas o no hay resultados para el filtro aplicado.</p>
+        </div>
+
+        <div class="button-container">
+            <a href="{{ url_for('index') }}" class="btn btn-back">↩️ Regresar al Registro</a>
+            <button id="export-excel" class="btn btn-export">📄 Exportar a Excel</button>
+            <button id="clear-data" class="btn btn-clear" disabled>🗑️ Borrar (No implementado)</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ventasBody = document.getElementById('ventasBody');
+            const summaryDiv = document.getElementById('summary');
+            const reportContent = document.getElementById('report-content');
+            const noDataMessage = document.getElementById('no-data-message');
+            const filterButton = document.getElementById('applyFilter');
+            const exportButton = document.getElementById('export-excel');
+
+            // --- CORRECCIÓN: Los datos ahora vienen del servidor Flask ---
+            let allVentas = [];
+            try {
+                // La variable 'ventas_json' es inyectada por Jinja2 desde app.py.
+                // El filtro '| safe' es crucial para que no se escapen las comillas del JSON.
+                allVentas = JSON.parse('{{ ventas_json | safe }}');
+            } catch (e) {
+                console.error("Error al interpretar los datos de ventas:", e);
+            }
+            
+            let displayedVentas = [...allVentas];
+
+            function renderTable(ventas) {
+                ventasBody.innerHTML = '';
+                if (ventas.length === 0) {
+                    reportContent.style.display = 'none';
+                    noDataMessage.style.display = 'block';
+                } else {
+                    reportContent.style.display = 'block';
+                    noDataMessage.style.display = 'none';
+                    let totalGeneral = 0;
+                    ventas.forEach(venta => {
+                        const row = ventasBody.insertRow();
+                        const fecha = new Date(venta.fecha).toLocaleDateString('es-PE', { timeZone: 'UTC' });
+                        row.innerHTML = `
+                            <td>${fecha}</td>
+                            <td>${venta.cliente || ''}</td>
+                            <td>${venta.familia || ''}</td>
+                            <td>${venta.especie || ''}</td>
+                            <td>${(parseFloat(venta.cantidad) || 0).toFixed(2)}</td>
+                            <td>${(parseFloat(venta.precio) || 0).toFixed(2)}</td>
+                            <td><strong>${(parseFloat(venta.total) || 0).toFixed(2)}</strong></td>
+                            <td>${venta.notas || ''}</td>
+                        `;
+                        totalGeneral += parseFloat(venta.total || 0);
+                    });
+                    summaryDiv.innerHTML = `Total (Filtro Actual): S/. ${totalGeneral.toFixed(2)}`;
+                }
+                displayedVentas = [...ventas];
+            }
+            
+            function applyFilters() {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const cliente = document.getElementById('filterCliente').value.toLowerCase();
+
+                let filteredVentas = allVentas.filter(venta => {
+                    const ventaDate = venta.fecha;
+                    const dateMatch = (!startDate || ventaDate >= startDate) && (!endDate || ventaDate <= endDate);
+                    const clienteMatch = !cliente || (venta.cliente && venta.cliente.toLowerCase().includes(cliente));
+                    return dateMatch && clienteMatch;
+                });
+                renderTable(filteredVentas);
+            }
+
+            function exportToCsv() {
+                if (displayedVentas.length === 0) {
+                    alert("No hay datos para exportar.");
+                    return;
+                }
+                const headers = ["Fecha", "Cliente", "Familia", "Especie", "Cantidad", "Precio", "Total Venta", "Notas"];
+                const csvContent = [
+                    headers.join(','),
+                    ...displayedVentas.map(v => [
+                        v.fecha, `"${v.cliente}"`, `"${v.familia}"`, `"${v.especie}"`,
+                        v.cantidad, v.precio, v.total, `"${(v.notas || '').replace(/"/g, '""')}"`
+                    ].join(','))
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "reporte_ventas.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            filterButton.addEventListener('click', applyFilters);
+            exportButton.addEventListener('click', exportToCsv);
+
+            // Carga inicial de datos
+            renderTable(allVentas);
+        });
+    </script>
+
+</body>
+</html>
+
